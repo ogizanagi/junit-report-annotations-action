@@ -1,16 +1,16 @@
 name: 'Report jUnit Annotations as Github Actions Annotations'
 description: 'Create an annotation of the Junit output'
 branding:
-  icon: 'box'  
+  icon: 'box'
   color: 'green'
 inputs:
   accessToken:
     description: 'github token'
-    required: false
+    required: true
+    default: ${{ github.token }}
   jobName:
     description: 'Job Name for the API'
-    default: 'build'
-    required: false
+    required: true
   stripFromPath:
     description: 'Path to strip from file'
     required: false

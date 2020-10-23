@@ -19,7 +19,7 @@ let sendToGithubUsingApi = async (annotations) => {
     const octokit = github.getOctokit(accessToken);
     const req = {
         ...github.context.repo,
-        ref: github.context.sha
+        ref: (github.context.payload && github.context.payload.after) || github.context.ref,
     }
     const res = await octokit.checks.listForRef(req);
 
@@ -27,7 +27,7 @@ let sendToGithubUsingApi = async (annotations) => {
 
     if (checkRuns.length === 0) {
         const msg = `Cannot find check by name ${jobName}`;
-        console.log(`${msg}, falling back to commands`);
+        console.log(`${msg}, falling back to commands`, { knowChecks: res.data.check_runs });
         throw new Error(msg);
     }
 
@@ -93,6 +93,10 @@ let writeCommands = async (annotations) => {
                                     line = '1';
                                 }
 
+                                line = parseInt(line);
+
+                                const raw = testCase.failure[0]['_'];
+
                                 annotations.push({
                                     path: file,
                                     start_line: line,
@@ -101,7 +105,8 @@ let writeCommands = async (annotations) => {
                                     end_column: 0,
                                     annotation_level: errorLevel === 'error' ? 'failure' : 'warning',
                                     title: testsuite['$'].name + "::" + testCase['$'].name,
-                                    message: testCase.failure[0]['_'],
+                                    message: ((testCase.failure[0].message || testCase.failure[0].type) || 'Error') + ': ' + raw.split('\n')[0],
+                                    raw_details: raw,
                                 });
                             }
                         }
